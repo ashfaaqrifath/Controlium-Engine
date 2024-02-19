@@ -16,7 +16,7 @@ Process ID: {pid}''',
     timeout=5,)
 
 def telegram_alert(send):
-    bot_token = "YOUR BOT TOEKN"
+    bot_token = "BOT TOKEN"
     my_chatID = "CHAT ID"
     send_text = "https://api.telegram.org/bot" + bot_token + "/sendMessage?chat_id=" + my_chatID + "&parse_mode=Markdown&text=" + send
 
@@ -32,7 +32,7 @@ def win_notification(message):
         timeout=5,)
 
 
-bot = telebot.TeleBot("YOUR BOT TOKEN")
+bot = telebot.TeleBot("BOT TOKEN")
 @bot.message_handler(func=lambda message: True)
 
 def command_engine(message):
@@ -77,12 +77,15 @@ def command_engine(message):
         bot.reply_to(message, "Enter notification messeage")
         bot.register_next_step_handler(message, win_notification)
     
-
     else:
         bot.reply_to(message, "Invalid Command")
 
+pc_user = os.getlogin()
 
-
-
-
-bot.polling()
+while True:
+    try:
+        telegram_alert(f"System online - {pc_user}")
+        bot.polling()
+    except:
+        print("System offline")
+        time.sleep(5)
