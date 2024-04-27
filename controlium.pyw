@@ -487,7 +487,7 @@ if __name__ == "__main__":
 
 
 # MIT License
-# Copyright (c) 2024 Ashfaaq Rifath
+# Copyright (c) 2024 Ashfaaq Rifath - Controlium Engine v1.5.2
 # All rights reserved.
 
 # USE WITH CAUSION
