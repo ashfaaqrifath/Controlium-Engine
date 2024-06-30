@@ -48,7 +48,7 @@ def command_unit(message):
             notification.notify(
                 title="Windows notification",
                 message="Controlium engine shutdown",
-                app_icon="appLogo.ico",
+                app_icon=None,
                 timeout=3,)
             
             bot.reply_to(message, "Engine shutdown")
@@ -118,7 +118,7 @@ def command_unit(message):
                 notification.notify(
                     title="Windows notification",
                     message=msg,
-                    app_icon="appLogo.ico",
+                    app_icon=None,
                     timeout=5,)
                 bot.reply_to(message, "Done")
     
@@ -334,7 +334,7 @@ def command_unit(message):
             bot.reply_to(message, f"Searching {query}")
 
         elif message.text.lower() == "/version":
-            bot.reply_to(message, "Controlium Engine v1.6.0")
+            bot.reply_to(message, "Controlium Engine v1.6.1")
 
         else:
             bot.reply_to(message, "Invalid command")
@@ -388,13 +388,6 @@ def windows_logger():
                 logging.info(f"Opened {window.title}")
                 logged_windows.add(window.title)
 
-                if window.title == "This PC":
-                    logging.info("Opened File Explorer")
-                elif window.title == "D:/":
-                    logging.info("Opened Local Disk")
-                elif window.title == "E:/":
-                    logging.info("Opened Local Disk")
-
         for title in logged_windows.copy():
             if title not in gw.getAllTitles():
                 logging.info(f"Closed {title}")
@@ -421,7 +414,7 @@ def key_release(key):
 def keystroke_logger():
     time_stamp = datetime.datetime.now().strftime("%D:%h:%H:%M:%S")
     with open(key_log_file, "a") as f:
-        f.write(f'''CONTROLIUM ENGINE v1.6.0
+        f.write(f'''CONTROLIUM ENGINE v1.6.1
 {str(time_stamp)}
 << KEYSTROKE LOG >>
 
@@ -441,7 +434,7 @@ def keystroke_logger():
 
 def activity_logger():
     time_stamp = datetime.datetime.now().strftime("%D:%h:%H:%M:%S")
-    logging.info(f'''CONTROLIUM ENGINE v1.6.0
+    logging.info(f'''CONTROLIUM ENGINE v1.6.1
 {str(time_stamp)}
 << ACTIVITY LOG >>
 
@@ -550,7 +543,7 @@ if __name__ == "__main__":
 
 
 # MIT License
-# Copyright (c) 2024 Ashfaaq Rifath - Controlium Engine v1.6.0
+# Copyright (c) 2024 Ashfaaq Rifath - Controlium Engine v1.6.1
 # All rights reserved.
 
 # T6 Engine
